@@ -24,6 +24,9 @@ export async function createEmployee(req, res, next) {
     const required = ["firstName", "lastName", "email", "department", "title", "joinDate", "baseSalary"];
     const missing = required.filter((field) => req.body[field] === undefined || req.body[field] === "");
     if (missing.length) return res.status(400).json({ message: `Missing: ${missing.join(", ")}` });
+    if (!/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@gmail\.com$/i.test(String(req.body.email).trim())) {
+      return res.status(400).json({ message: "Use a valid Gmail address ending in @gmail.com for the employee email." });
+    }
     const employee = await Employee.create({
       ...req.body,
       employeeCode: `EMP-${Date.now().toString().slice(-8)}`,
@@ -81,7 +84,7 @@ export async function updateEmployee(req, res, next) {
     }
     const editableFields = ["firstName", "lastName", "email", "department", "title", "employmentType", "status", "joinDate", "baseSalary", "fixedAllowances", "location"];
     const updates = Object.fromEntries(Object.entries(req.body).filter(([key]) => editableFields.includes(key)));
-    if (updates.email && !/^[^\s@\\]+@[^\s@\\]+\.[^\s@\\]{2,}$/.test(String(updates.email).trim())) return res.status(400).json({ message: "Enter a valid email address, for example name@example.com." });
+    if (updates.email && !/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@gmail\.com$/i.test(String(updates.email).trim())) return res.status(400).json({ message: "Use a valid Gmail address ending in @gmail.com." });
     const account = await User.findOne({ employee: req.params.id });
     if (account && updates.email && String(updates.email).trim().toLowerCase() !== account.email) {
       const emailInUse = await User.exists({ _id: { $ne: account._id }, email: String(updates.email).trim().toLowerCase() });

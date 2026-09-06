@@ -1,0 +1,80 @@
+{
+  "info": {
+    "_postman_id": "dcde4ff2-58b7-4be2-ab2d-b64c242dfc5b",
+    "name": "PeoplePay360 - Local API",
+    "description": "Local Express + MongoDB API tests. Run Login first; it stores the JWT in the active environment.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/health" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Health check succeeds', function () { pm.response.to.have.status(200); });", "pm.expect(pm.response.json().status).to.eql('ok');"], "type": "text/javascript" } }]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login (stores token)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}" },
+            "url": "{{baseUrl}}/api/auth/login"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Login succeeds', function () { pm.response.to.have.status(200); });", "const body = pm.response.json();", "pm.environment.set('token', body.token);", "pm.environment.set('currentUserId', body.user.id);"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "Invalid Login Rejected",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"invalid@example.com\",\n  \"password\": \"wrong-password\"\n}" },
+            "url": "{{baseUrl}}/api/auth/login"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Invalid login is rejected', function () { pm.response.to.have.status(401); });"], "type": "text/javascript" } }]
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Live Summary",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/api/dashboard/summary" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Dashboard summary succeeds', function () { pm.response.to.have.status(200); });", "pm.expect(pm.response.json().data).to.have.property('totalEmployees');"], "type": "text/javascript" } }]
+        }
+      ]
+    },
+    {
+      "name": "Employees (Admin)",
+      "item": [
+        {
+          "name": "List Employee Profiles",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/api/employees" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Employee list succeeds', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "List Accounts and Roles",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/api/employee-accounts" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Admin account list succeeds', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        }
+      ]
+    },
+    {
+      "name": "HR Operations",
+      "item": [
+        {
+          "name": "List Leave Requests",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/api/leave-requests" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Leave request list succeeds', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "List Attendance",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/api/attendance" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Attendance list succeeds', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        }
+      ]
+    }
+  ]
+}
